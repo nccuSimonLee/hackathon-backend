@@ -86,6 +86,4 @@ class TableManager(metaclass=Singleton):
         for table_no, table in self._tables.items():
             if table.is_empty():
                 picked_table = table_no
-        if picked_table is not None:
-            self._tables[picked_table].occupy()
         return picked_table
