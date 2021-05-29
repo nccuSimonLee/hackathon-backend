@@ -4,3 +4,4 @@ Flask==1.0
 itsdangerous==0.24
 MarkupSafe==1.1.1
 Werkzeug==0.15.5
+flask-cors

@@ -3,6 +3,7 @@ import json
 from functools import partial
 import flask
 from flask import request, Response
+from flask_cors import CORS
 import os
 from boto3 import client
 
@@ -12,6 +13,7 @@ from lineup_queue import LineupQueue
 
 # Create and configure the Flask app
 application = flask.Flask(__name__)
+CORS(application)
 os.environ['APP_CONFIG'] = 'default_config'
 application.config.from_envvar('APP_CONFIG', silent=True)
 application.debug = application.config['FLASK_DEBUG'] in ['true', 'True']
