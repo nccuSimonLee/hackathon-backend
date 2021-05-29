@@ -32,7 +32,7 @@ def reservation():
             dining_no
         )
     else:
-        response = reservation.cancel_table(params['phone_no'])
+        response = RESERVATION.cancel_table(params['phone_no'])
     return flask.jsonify(response)
 
 
