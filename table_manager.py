@@ -57,3 +57,35 @@ class Table:
     
     def is_occupied(self):
         return self._state == 'occupied'
+
+
+class TableManager(metaclass=Singleton):
+    def __init__(self, table_amount=6):
+        self._table_amount = table_amount
+        self._tables = {
+            table_no: Table(table_no)
+            for table_no in range(table_amount)
+        }
+    
+    def get_remaining_time(self, table_no):
+        return self._tables[table_no].remaining_time
+    
+    def get_state(self, table_no):
+        return self._tables[table_no].state
+    
+    def free_table(self, table_no):
+        self._tables[table_no].free()
+    
+    def occupy_table(self, table_no):
+        if self._tables[table_no].is_empty():
+            self._tables[table_no].occupy()
+        return
+    
+    def get_empty_table(self):
+        picked_table = None
+        for table_no, table in self._tables.items():
+            if table.is_empty():
+                picked_table = table_no
+        if picked_table is not None:
+            self._tables[picked_table].occupy()
+        return picked_table
