@@ -48,3 +48,12 @@ class Table:
     
     def book(self):
         self._state = 'booked'
+    
+    def is_empty(self):
+        return self._state == 'empty'
+    
+    def is_booked(self):
+        return self._state == 'booked'
+    
+    def is_occupied(self):
+        return self._state == 'occupied'
