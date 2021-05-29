@@ -29,3 +29,6 @@ class LineupQueue(metaclass=Singleton):
 
     def get_next_dining_no(self):
         return self._queue.popleft()
+    
+    def is_empty(self):
+        return not self._queue
