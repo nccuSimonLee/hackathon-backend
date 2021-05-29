@@ -23,12 +23,12 @@ LINEUP_QUEUE = LineupQueue()
 
 @application.route('/reservation', methods=['POST'])
 def reservation():
-    params = request.json
+    params = request.json or request.form
     if params['action'] == 'book':
         dining_no = LINEUP_QUEUE.take_showup_no()
         response = RESERVATION.book_table(
             params['phone_no'],
-            params['time_slot'], 
+            str(params['time_slot']), 
             dining_no
         )
     else:
