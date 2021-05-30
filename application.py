@@ -6,10 +6,12 @@ from flask import request, Response
 from flask_cors import CORS
 import os
 from boto3 import client
+import time
 
 from reservation import Reservation
 from lineup_queue import LineupQueue
 from table_manager import TableManager
+from clock import Clock
 
 
 # Create and configure the Flask app
@@ -24,7 +26,20 @@ RESERVATION = Reservation(ddb, application.config['TABLE_NAME'])
 
 LINEUP_QUEUE = LineupQueue()
 
-TABLE_MANAGER = TableManager(6)
+def init_table_manager(ddb):
+    table_manager = TableManager(Clock(), 6)
+    time.sleep(10)
+    response = ddb.scan(TableName='reservation')
+    phone_to_no = {i['phone_no']['S']: i['dining_no']['S']
+                   for i in response['Items']}
+    slot_to_hour = {str(i): h for i, h in zip(range(4), range(13, 17))}
+    books = [(slot_to_hour[i['time_slot']['S']], i['dining_no']['S'])
+            for i in response['Items']]
+    table_manager.arrange_books(books)
+    return (phone_to_no, table_manager)
+
+PHONE_TO_NO, TABLE_MANAGER = init_table_manager(ddb)
+
 
 @application.route('/reservation', methods=['POST'])
 def reservation():
@@ -53,6 +68,12 @@ def take_a_number():
             LINEUP_QUEUE.get_next_dining_no()
             TABLE_MANAGER.occupy_table(table_no)
             response['table_no'] = str(table_no)
+    else:
+        response['status'] = 'success'
+        dining_no = PHONE_TO_NO[params['phone_no']]
+        response['dining_no'] = dining_no
+        table_no = TABLE_MANAGER.show_up(dining_no)
+        response['table_no'] = str(table_no)
     return flask.jsonify(response)
 
 @application.route('/free-a-table', methods=['POST'])
@@ -67,6 +88,7 @@ def free_a_table():
     }
     if response['occupation'] == 'empty' and not LINEUP_QUEUE.is_empty():
         response['occupation'] = LINEUP_QUEUE.get_next_dining_no()
+        TABLE_MANAGER.occupy_table(table_no)
     return flask.jsonify(response)
 
 @application.route('/table-status', methods=['POST'])
