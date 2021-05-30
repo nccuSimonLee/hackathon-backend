@@ -114,3 +114,30 @@
 | remain_minutes | number | required | 剩餘分鐘
 | remain_seconds | number | required | 剩餘秒數
 <br>
+
+## Dining Table
+### Endpoint URL
+`http://Hackathonbackend-env.eba-ivjdqudb.us-east-1.elasticbeanstalk.com/dining-table`
+
+### JSON body parameters
+| Name | Type | Required | Description |
+| ---- | ----- | ------ | ---------- |
+| dining_no | str | required | 要查桌號的用餐號碼 |
+<br>
+
+### Example response
+```json
+{
+    'status': 'success',
+    'dining_no': '001'
+    'table_no': '0',
+}
+```
+
+### Response fields
+| Name | Type | Required | Description |
+| ---- | ----- | ------ | ---------- |
+| status | str | required | success: 有查到桌號 ;<br>fail: 沒查到
+| dining_no | str | required | 要查桌號的用餐號碼
+| table_no | str | optional | 用餐號碼所在的桌號
+<br>

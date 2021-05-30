@@ -26,6 +26,10 @@ RESERVATION = Reservation(ddb, application.config['TABLE_NAME'])
 
 LINEUP_QUEUE = LineupQueue()
 
+
+TABLE_TO_USER = {}
+USER_TO_TABLE = {}
+
 def init_table_manager(ddb):
     table_manager = TableManager(Clock(), 6)
     time.sleep(10)
@@ -68,12 +72,16 @@ def take_a_number():
             LINEUP_QUEUE.get_next_dining_no()
             TABLE_MANAGER.occupy_table(table_no)
             response['table_no'] = str(table_no)
+            USER_TO_TABLE[dining_no] = table_no
+            TABLE_TO_USER[table_no] = dining_no
     else:
         response['status'] = 'success'
         dining_no = PHONE_TO_NO[params['phone_no']]
         response['dining_no'] = dining_no
         table_no = TABLE_MANAGER.show_up(dining_no)
         response['table_no'] = str(table_no)
+        USER_TO_TABLE[dining_no] = table_no
+        TABLE_TO_USER[table_no] = dining_no
     return flask.jsonify(response)
 
 @application.route('/free-a-table', methods=['POST'])
@@ -86,9 +94,14 @@ def free_a_table():
         'table_no': str(table_no),
         'occupation': TABLE_MANAGER.get_state(table_no)
     }
+    del USER_TO_TABLE[TABLE_TO_USER[table_no]]
+    del TABLE_TO_USER[table_no]
     if response['occupation'] == 'empty' and not LINEUP_QUEUE.is_empty():
-        response['occupation'] = LINEUP_QUEUE.get_next_dining_no()
+        nxt_dining_no = LINEUP_QUEUE.get_next_dining_no()
+        response['occupation'] = nxt_dining_no
         TABLE_MANAGER.occupy_table(table_no)
+        TABLE_TO_USER[table_no] = nxt_dining_no
+        USER_TO_TABLE[nxt_dining_no] = table_no
     return flask.jsonify(response)
 
 @application.route('/table-status', methods=['POST'])
@@ -103,6 +116,16 @@ def table_status():
         'remain_minutes': remaining_time.minute,
         'remain_seconds': remaining_time.second
     }
+    return flask.jsonify(response)
+
+@application.route('/dining-table', methods=['POST'])
+def dining_table():
+    params = request.json or request.form
+    dining_no = params['dining_no']
+    response = {'status': 'fail', 'dining_no': dining_no}
+    if dining_no in USER_TO_TABLE:
+        response['status'] = 'success'
+        response['table_no'] = str(USER_TO_TABLE[dining_no])
     return flask.jsonify(response)
 
 if __name__ == '__main__':
